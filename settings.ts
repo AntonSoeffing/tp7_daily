@@ -5,14 +5,16 @@ export interface MyPluginSettings {
 	journalFolder: string;
 	dateFormat: string;
 	openaiApiKey: string;
-	useTestTranscript: boolean; // Add this line
+	useTestTranscript: boolean;
+	dailyNoteTemplatePath: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	journalFolder: 'Daily Journal',
 	dateFormat: 'DD.MM.YYYY',
 	openaiApiKey: '',
-	useTestTranscript: false // Add this line
+	useTestTranscript: false,
+	dailyNoteTemplatePath: ''
 }
 
 export const PLUGIN_NAME = 'TP-7 Daily Memos';
@@ -63,13 +65,24 @@ export class SampleSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		new Setting(containerEl) // Add this block
+		new Setting(containerEl)
 			.setName('Use Test Transcript')
 			.setDesc('Use a test transcript instead of calling the OpenAI API.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.useTestTranscript)
 				.onChange(async (value) => {
 					this.plugin.settings.useTestTranscript = value;
+					await this.plugin.saveSettings();
+					}));
+
+		new Setting(containerEl)
+			.setName('Daily Note Template Path')
+			.setDesc('Path to the markdown file used as a template.')
+			.addText(text => text
+				.setPlaceholder('Enter your daily note template path')
+				.setValue(this.plugin.settings.dailyNoteTemplatePath)
+				.onChange(async (value) => {
+					this.plugin.settings.dailyNoteTemplatePath = value;
 					await this.plugin.saveSettings();
 				}));
 	}
