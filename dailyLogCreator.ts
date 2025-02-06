@@ -8,14 +8,14 @@ export async function createDailyNote(
 	selectedDate: string,
 	audioFiles: File[],
 	settings: MyPluginSettings,
-	transcribeAudio: (audioFile: File) => Promise<string>
+	transcribeAudio: (audioFile: File, settings: MyPluginSettings) => Promise<string>
 ): Promise<void> {
 	if (!selectedDate) {
 		new Notice('Please select a date.');
 		return;
 	}
 
-	if (audioFiles.length === 0) {
+	if (audioFiles.length === 0 && !settings.useTestTranscript) {
 		new Notice('Please drop some audio files.');
 		return;
 	}
@@ -38,16 +38,24 @@ export async function createDailyNote(
 		return;
 	}
 
-	let fileContent = `# Daily Log for ${formattedDate}\n\n`;
+	let fileContent = '> [!faq]- Transcripts\n> \n';
 
 	// Transcribe each audio file and add the transcript to the content
-	for (const audioFile of audioFiles) {
-		try {
-			const transcript = await transcribeAudio(audioFile);
-			fileContent += `## Transcript for ${audioFile.name}\n${transcript}\n\n`;
-		} catch (error) {
-			new Notice(`Error transcribing ${audioFile.name}: ${error}`);
-			return;
+	if (settings.useTestTranscript) {
+		const transcript = await transcribeAudio(new File([], 'test.wav'), settings);
+		fileContent += `> > [!info]- Test Transcript\n> > ${transcript}\n\n`;
+	} else {
+		for (const audioFile of audioFiles) {
+			try {
+				const transcript = await transcribeAudio(audioFile, settings);
+				const [date, time] = audioFile.name.split('_').slice(0, 2);
+				const formattedDate = moment(date, 'YYYY-MM-DD').format(settings.dateFormat);
+				const formattedTime = `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`;
+				fileContent += `> > [!info]- Transcript for ${formattedDate} at ${formattedTime}\n> > ${transcript}\n\n`;
+			} catch (error) {
+				new Notice(`Error transcribing ${audioFile.name}: ${error}`);
+				return;
+			}
 		}
 	}
 
