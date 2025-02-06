@@ -1,0 +1,5 @@
+We use a modern, modular typescript approach with well designed software architecture and domain driven design.
+
+We adhere to the Obsidian.md Documenatation at all time: https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
+
+I want to build a plugin that integrates my Teenage Engineering TP-7 Memos into my obsidian.md journaling workflow. Basically it should take multiple audio files and then first transcribe them using openai whisper. For that we could use https://github.com/nikdanilov/whisper-obsidian-plugin as a starting point. Then later it should also use openai o3-mini model to use the transcript to create the daily note for me as good as it can, based on a template that the user provides as guideline. the o3-mini basically gets that template md file + the transcripts to return the generated note.
