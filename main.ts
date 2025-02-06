@@ -1,7 +1,8 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-// Removed import for TranscriberView and VIEW_TYPE_TRANSCRIBER
-import DailyLogView, { VIEW_TYPE_DAILY_LOG } from './DailyLogView';
-import { MyPluginSettings, DEFAULT_SETTINGS } from './settings';
+import DailyLogView from './DailyLogView';
+import { MyPluginSettings, DEFAULT_SETTINGS, SampleSettingTab } from './settings';
+
+export const VIEW_TYPE_DAILY_LOG = 'te-daily-log'; // Export the constant
 
 export default class TP7DailyMemo extends Plugin {
 	settings: MyPluginSettings;
@@ -81,31 +82,5 @@ class SampleModal extends Modal {
 	onClose() {
 		const {contentEl} = this;
 		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: TP7DailyMemo;
-
-	constructor(app: App, plugin: TP7DailyMemo) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(((this.plugin.settings as any).mySetting) || '')
-				.onChange(async (value) => {
-					(this.plugin.settings as any).mySetting = value;
-					await this.plugin.saveSettings();
-				}));
 	}
 }

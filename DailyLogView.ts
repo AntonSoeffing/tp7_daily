@@ -1,9 +1,13 @@
-import { ItemView, WorkspaceLeaf, Plugin } from 'obsidian';
-export const VIEW_TYPE_DAILY_LOG = 'te-daily-log';
+import { ItemView, WorkspaceLeaf, Plugin, Notice, TFile, TFolder } from 'obsidian';
+import TP7DailyMemo, { VIEW_TYPE_DAILY_LOG } from './main'; // Import the main plugin class and named export
+import { createDailyNote } from './dailyLogCreator';
+import { transcribeAudio } from './transcriptionService';
 
 export default class DailyLogView extends ItemView {
-	plugin: Plugin;
-	constructor(leaf: WorkspaceLeaf, plugin: Plugin) {
+	plugin: TP7DailyMemo; // Use the actual plugin class type
+	audioFiles: File[] = [];
+
+	constructor(leaf: WorkspaceLeaf, plugin: TP7DailyMemo) {
 		super(leaf);
 		this.plugin = plugin;
 	}
@@ -37,16 +41,33 @@ export default class DailyLogView extends ItemView {
 		dropZone.addEventListener('dragover', (e) => {
 			e.preventDefault();
 			dropZone.style.backgroundColor = '#fafafa';
-		}); 
+		});
 		dropZone.addEventListener('dragleave', (e) => {
 			e.preventDefault();
 			dropZone.style.backgroundColor = 'transparent';
 		});
 		dropZone.addEventListener('drop', (e: DragEvent) => {
 			e.preventDefault();
-			// ...existing file processing code...
-			// Here you would add your call to OpenAI Whisper for transcription and later
-			// the o3-mini for note generation.
+			if (e.dataTransfer?.files) {
+				this.audioFiles = Array.from(e.dataTransfer.files);
+				new Notice(`Added ${this.audioFiles.length} audio files.`);
+			}
+		});
+
+		// Create a "Create Daily Note" button
+		const createButton = this.contentEl.createEl('button', { text: 'Create Daily Note' });
+		createButton.addEventListener('click', async () => {
+			const selectedDate = dateInput.value;
+
+			await createDailyNote(
+				this.app,
+				selectedDate,
+				this.audioFiles,
+				this.plugin.settings,
+				transcribeAudio
+			);
+
+			this.audioFiles = [];
 		});
 		// ...existing code...
 	}
