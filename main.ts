@@ -18,10 +18,13 @@ export default class TP7DailyMemo extends Plugin {
 			// Open the DailyLogView
 			this.app.workspace.detachLeavesOfType(VIEW_TYPE_DAILY_LOG);
 
-			await this.app.workspace.getRightLeaf(false).setViewState({
-				type: VIEW_TYPE_DAILY_LOG,
-				active: true,
-			});
+			const rightLeaf = this.app.workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				await rightLeaf.setViewState({
+					type: VIEW_TYPE_DAILY_LOG,
+					active: true,
+				});
+			}
 
 			this.app.workspace.revealLeaf(
 				this.app.workspace.getLeavesOfType(VIEW_TYPE_DAILY_LOG)[0]

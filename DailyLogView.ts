@@ -20,8 +20,14 @@ export default class DailyLogView extends ItemView {
 		this.contentEl.empty();
 		// Create a header
 		this.contentEl.createEl('h1', { text: 'Create Daily Log from TP-7 Memos' });
+
+		// Get the current date in YYYY-MM-DD format
+		const today = new Date().toISOString().split('T')[0];
+
 		// Create a date input for the journal date
-		const dateInput = this.contentEl.createEl('input', { type: 'text', placeholder: 'Enter date (e.g. 20.12.2025)' });
+		const dateInput = this.contentEl.createEl('input', { type: 'date' });
+		dateInput.value = today; // Set the default value to today's date
+
 		// Create a drop zone for file uploads
 		const dropZone = this.contentEl.createEl('div', { text: 'Drop your TP-7 audio files here' });
 		dropZone.style.border = '2px dashed #ccc';
