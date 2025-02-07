@@ -1,8 +1,53 @@
-import { Notice, TFile, App } from 'obsidian';
+import { Notice, TFile, App, Modal, Setting } from 'obsidian';
 import { MyPluginSettings } from './settings';
 import { ITranscriptionService } from './services/interfaces';
 import { NoteGenerationService } from './services/noteGenerationService';
 import moment from 'moment';
+
+class FileExistsModal extends Modal {
+    private result: boolean = false;
+    private resolved: boolean = false;
+    private resolvePromise: ((value: boolean) => void) | null = null;
+
+    constructor(app: App, private fileName: string) {
+        super(app);
+    }
+
+    async waitForClose(): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.resolvePromise = resolve;
+        });
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.createEl("h2", { text: "File Already Exists" });
+        contentEl.createEl("p", { text: `"${this.fileName}" already exists. Would you like to create a new version?` });
+
+        new Setting(contentEl)
+            .addButton(btn => btn
+                .setButtonText("Cancel")
+                .onClick(() => {
+                    this.result = false;
+                    this.close();
+                }))
+            .addButton(btn => btn
+                .setButtonText("Create New Version")
+                .setCta()
+                .onClick(() => {
+                    this.result = true;
+                    this.close();
+                }));
+    }
+
+    onClose() {
+        if (this.resolvePromise) {
+            this.resolvePromise(this.result);
+        }
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
 
 export async function createDailyNote(
     app: App,
@@ -26,9 +71,25 @@ export async function createDailyNote(
     const fileName = `${formattedDate}.md`;
     const filePath = `${settings.journalFolder}/${fileName}`;
 
-    if (app.vault.getAbstractFileByPath(filePath) instanceof TFile) {
-        new Notice(`File ${fileName} already exists.`);
-        return;
+    let finalFilePath = filePath;
+    const existingFile = app.vault.getAbstractFileByPath(filePath);
+    
+    if (existingFile instanceof TFile) {
+        const modal = new FileExistsModal(app, fileName);
+        modal.open();
+        
+        const shouldContinue = await modal.waitForClose();
+        if (!shouldContinue) {
+            return;
+        }
+
+        // Create new version of the file
+        let counter = 1;
+        const baseName = fileName.replace('.md', '');
+        while (app.vault.getAbstractFileByPath(`${settings.journalFolder}/${baseName} - ${counter}.md`) instanceof TFile) {
+            counter++;
+        }
+        finalFilePath = `${settings.journalFolder}/${baseName} - ${counter}.md`;
     }
 
     try {
@@ -61,8 +122,8 @@ export async function createDailyNote(
         }
         
 
-        await app.vault.create(filePath, generatedContent);
-        new Notice(`Created daily note: ${filePath}`);
+        await app.vault.create(finalFilePath, generatedContent);
+        new Notice(`Created daily note: ${finalFilePath}`);
     } catch (error) {
         new Notice(`Error creating daily note: ${error}`);
     }
