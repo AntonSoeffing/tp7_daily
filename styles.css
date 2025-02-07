@@ -14,3 +14,8 @@ If your plugin does not need CSS, delete this file.
 .dragover {
   background-color: var(--background-modifier-hover);
 }
+
+.audio-files-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

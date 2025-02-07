@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile, TFolder, Setting } from 'obsidian';
+import { ItemView, WorkspaceLeaf, Notice, TFile, TFolder, Setting, ButtonComponent } from 'obsidian';
 import TP7DailyMemo, { VIEW_TYPE_DAILY_LOG } from './main';
 import { createDailyNote } from './dailyLogCreator';
 import { TranscriptionService } from './services/transcriptionService';
@@ -6,6 +6,8 @@ import { TranscriptionService } from './services/transcriptionService';
 export default class DailyLogView extends ItemView {
 	plugin: TP7DailyMemo;
 	audioFiles: File[] = [];
+	isCreatingNote: boolean = false; // Add a flag to track note creation status
+	createButton: ButtonComponent;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TP7DailyMemo) {
 		super(leaf);
@@ -99,22 +101,36 @@ export default class DailyLogView extends ItemView {
 		(window as any).updateAudioFilesView = updateAudioFilesView;
 		updateAudioFilesView();
 
-		const createButton = contentEl.createEl('button', { text: 'Create Daily Note' });
-		createButton.addEventListener('click', async () => {
-			const transcriptionService = new TranscriptionService(this.plugin.settings);
-			await createDailyNote(
-				this.app,
-				datePicker.value,
-				this.audioFiles,
-				this.plugin.settings,
-				transcriptionService
-			);
-			this.audioFiles = [];
-			updateAudioFilesView();
-		});
+		// Create button with full width and loading indicator
+		new Setting(contentEl)
+			.addButton(button => {
+				this.createButton = button
+					.setButtonText('Create Daily Note')
+					.setCta()
+					.onClick(async () => {
+						if (this.isCreatingNote) return; // Prevent multiple clicks
+						this.isCreatingNote = true;
+						this.createButton.setButtonText('Creating Daily Note...'); // Change button text to indicate loading
+						this.createButton.setDisabled(true); // Disable the button to prevent multiple clicks
 
-		// ...existing code...
-		contentEl.appendChild(createButton);
+						try {
+							const transcriptionService = new TranscriptionService(this.plugin.settings);
+							await createDailyNote(
+								this.app,
+								datePicker.value,
+								this.audioFiles,
+								this.plugin.settings,
+								transcriptionService
+							);
+							this.audioFiles = [];
+							updateAudioFilesView();
+						} finally {
+							this.isCreatingNote = false;
+							this.createButton.setButtonText('Create Daily Note'); // Restore button text
+							this.createButton.setDisabled(false); // Enable the button
+						}
+					});
+			});
 	}
 
 	async onClose() {
