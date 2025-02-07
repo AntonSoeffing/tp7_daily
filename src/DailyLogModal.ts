@@ -43,6 +43,45 @@ export class DailyLogModal extends Modal {
             text: 'Drop your TP-7 audio files here\nor click to select files'
         });
         
+        // Create hidden file input
+        const fileInput = settingsContainer.createEl('input', {
+            type: 'file',
+            attr: {
+                multiple: true,
+                accept: 'audio/*',
+                style: 'display: none'
+            }
+        });
+
+        // Add click handler to drop zone
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Add file input change handler
+        fileInput.addEventListener('change', (e) => {
+            const target = e.target as HTMLInputElement;
+            if (target.files) {
+                console.log('Files selected via picker:', Array.from(target.files).map(f => f.name));
+                const newFiles = Array.from(target.files)
+                    .filter(file => !this.audioFiles.some(existing => 
+                        existing.name === file.name && 
+                        existing.size === file.size
+                    ));
+                console.log('New files to be added:', newFiles.map(f => f.name));
+                this.audioFiles.push(...newFiles);
+                
+                // Sort files after adding new ones
+                this.audioFiles = this.sortAudioFiles(this.audioFiles);
+                
+                const fileList = dropZone.parentElement?.querySelector('.tp7-file-list');
+                if (fileList instanceof HTMLElement) {
+                    this.updateFileList(fileList);
+                }
+                new Notice(`Added ${newFiles.length} audio files`);
+            }
+        });
+        
         this.setupDragAndDrop(dropZone);
 
         // File list container
@@ -147,11 +186,13 @@ export class DailyLogModal extends Modal {
         dropZone.addEventListener('drop', (e: DragEvent) => {
             dropZone.removeClass('dragover');
             if (e.dataTransfer?.files) {
+                console.log('Files dropped:', Array.from(e.dataTransfer.files).map(f => f.name));
                 const newFiles = Array.from(e.dataTransfer.files)
                     .filter(file => !this.audioFiles.some(existing => 
                         existing.name === file.name && 
                         existing.size === file.size
                     ));
+                console.log('New files to be added:', newFiles.map(f => f.name));
                 this.audioFiles.push(...newFiles);
                 
                 // Sort files after adding new ones
