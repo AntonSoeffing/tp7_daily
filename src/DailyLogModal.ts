@@ -97,7 +97,10 @@ export class DailyLogModal extends Modal {
             return;
         }
 
-        this.audioFiles.forEach((file, index) => {
+        // Sort files before displaying
+        const sortedFiles = this.sortAudioFiles(this.audioFiles);
+
+        sortedFiles.forEach((file, index) => {
             const { displayDate, displayTime, sequence } = this.formatFileName(file.name);
             const displayText = sequence !== '000' ? 
                 `${displayDate} at ${displayTime} (${sequence})` : 
@@ -113,6 +116,20 @@ export class DailyLogModal extends Modal {
                            this.audioFiles.splice(index, 1);
                            this.updateFileList(fileListContainer);
                        }));
+        });
+    }
+
+    private sortAudioFiles(files: File[]): File[] {
+        return [...files].sort((a, b) => {
+            // Extract date and time from filenames (format: YYYY-MM-DD_HHMMSS_000.wav)
+            const [dateA, timeA] = a.name.split('_');
+            const [dateB, timeB] = b.name.split('_');
+            
+            // Create comparable timestamps
+            const timestampA = moment(`${dateA} ${timeA.slice(0, 2)}:${timeA.slice(2, 4)}:${timeA.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
+            const timestampB = moment(`${dateB} ${timeB.slice(0, 2)}:${timeB.slice(2, 4)}:${timeB.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
+            
+            return timestampA.valueOf() - timestampB.valueOf();
         });
     }
 
@@ -137,7 +154,14 @@ export class DailyLogModal extends Modal {
                         existing.size === file.size
                     ));
                 this.audioFiles.push(...newFiles);
-                this.updateFileList(dropZone.nextElementSibling as HTMLElement);
+                
+                // Sort files after adding new ones
+                this.audioFiles = this.sortAudioFiles(this.audioFiles);
+                
+                const fileList = dropZone.parentElement?.querySelector('.tp7-file-list');
+                if (fileList instanceof HTMLElement) {
+                    this.updateFileList(fileList);
+                }
                 new Notice(`Added ${newFiles.length} audio files`);
             }
         });
