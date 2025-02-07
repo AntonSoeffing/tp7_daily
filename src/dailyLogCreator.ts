@@ -38,12 +38,28 @@ export async function createDailyNote(
                 audioFiles.map(file => transcriptionService.transcribeAudio(file, settings.openaiApiKey))
             );
 
-        const generatedContent = await noteGenerationService.generateNote(
+        let generatedContent = await noteGenerationService.generateNote(
             app,
             transcripts,
             settings.dailyNoteTemplatePath,
             settings.openaiApiKey
         );
+
+        generatedContent += '\n\n> [!quote]- Transcripts\n';
+
+        // Append transcripts to the generated content
+        if (settings.useTestTranscript) {
+            generatedContent += `> > [!quote]- Test Transcript\n> > ${transcripts[0]}\n\n`;
+        } else {
+            audioFiles.forEach((audioFile, index) => {
+                const transcript = transcripts[index];
+                const [date, time] = audioFile.name.split('_').slice(0, 2);
+                const formattedDate = moment(date, 'YYYY-MM-DD').format(settings.dateFormat);
+                const formattedTime = `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`;
+                generatedContent += `> > [!quote]- Transcript for ${formattedDate} at ${formattedTime}\n> > ${transcript}\n>\n`;
+            });
+        }
+        
 
         await app.vault.create(filePath, generatedContent);
         new Notice(`Created daily note: ${filePath}`);
