@@ -122,7 +122,6 @@ export default class DailyLogView extends ItemView {
 								this.plugin.settings,
 								transcriptionService
 							);
-							this.audioFiles = [];
 							updateAudioFilesView();
 						} finally {
 							this.isCreatingNote = false;
