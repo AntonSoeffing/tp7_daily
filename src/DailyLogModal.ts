@@ -186,23 +186,31 @@ export class DailyLogModal extends Modal {
         dropZone.addEventListener('drop', (e: DragEvent) => {
             dropZone.removeClass('dragover');
             if (e.dataTransfer?.files) {
-                console.log('Files dropped:', Array.from(e.dataTransfer.files).map(f => f.name));
-                const newFiles = Array.from(e.dataTransfer.files)
-                    .filter(file => !this.audioFiles.some(existing => 
-                        existing.name === file.name && 
-                        existing.size === file.size
-                    ));
-                console.log('New files to be added:', newFiles.map(f => f.name));
-                this.audioFiles.push(...newFiles);
-                
-                // Sort files after adding new ones
-                this.audioFiles = this.sortAudioFiles(this.audioFiles);
-                
-                const fileList = dropZone.parentElement?.querySelector('.tp7-file-list');
-                if (fileList instanceof HTMLElement) {
-                    this.updateFileList(fileList);
+                const droppedFiles = Array.from(e.dataTransfer.files)
+                    .filter(file => file.type.startsWith('audio/'));
+
+                // Now filter by both filename and file size (like in file input handler)
+                const uniqueFiles = droppedFiles.filter(newFile => 
+                    !this.audioFiles.some(existing => 
+                        existing.name === newFile.name &&
+                        existing.size === newFile.size
+                    )
+                );
+
+                if (uniqueFiles.length > 0) {
+                    this.audioFiles.push(...uniqueFiles);
+                    this.audioFiles = this.sortAudioFiles(this.audioFiles);
+                    
+                    const fileList = dropZone.parentElement?.querySelector('.tp7-file-list');
+                    if (fileList instanceof HTMLElement) {
+                        this.updateFileList(fileList);
+                    }
+                    new Notice(`Added ${uniqueFiles.length} audio files`);
+                } else if (droppedFiles.length > 0) {
+                    new Notice('These files have already been added');
+                } else {
+                    new Notice('No valid audio files found');
                 }
-                new Notice(`Added ${newFiles.length} audio files`);
             }
         });
     }
