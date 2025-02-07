@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf, Plugin, Notice, TFile, TFolder } from 'obsidian';
 import TP7DailyMemo, { VIEW_TYPE_DAILY_LOG } from './main'; // Import the main plugin class and named export
 import { createDailyNote } from './dailyLogCreator';
-import { transcribeAudio } from './transcriptionService';
+import { TranscriptionService } from './services/transcriptionService';
 
 export default class DailyLogView extends ItemView {
 	plugin: TP7DailyMemo; // Use the actual plugin class type
@@ -58,13 +58,14 @@ export default class DailyLogView extends ItemView {
 		const createButton = this.contentEl.createEl('button', { text: 'Create Daily Note' });
 		createButton.addEventListener('click', async () => {
 			const selectedDate = dateInput.value;
+			const transcriptionService = new TranscriptionService(this.plugin.settings);
 
 			await createDailyNote(
 				this.app,
 				selectedDate,
 				this.audioFiles,
 				this.plugin.settings,
-				transcribeAudio
+				transcriptionService
 			);
 
 			this.audioFiles = [];
