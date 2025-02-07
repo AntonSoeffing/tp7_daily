@@ -1,6 +1,6 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import DailyLogView from './DailyLogView';
+import { Plugin } from 'obsidian';
 import { MyPluginSettings, DEFAULT_SETTINGS, SampleSettingTab } from './settings';
+import { DailyLogModal } from './DailyLogModal';
 
 export const VIEW_TYPE_DAILY_LOG = 'te-daily-log'; // Export the constant
 
@@ -10,35 +10,10 @@ export default class TP7DailyMemo extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// Register the custom daily log view instead of transcriber view
-		this.registerView(VIEW_TYPE_DAILY_LOG, (leaf) => new DailyLogView(leaf, this));
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'TP-7 Daily Memo', async (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			// Open the DailyLogView
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE_DAILY_LOG);
-
-			const rightLeaf = this.app.workspace.getRightLeaf(false);
-			if (rightLeaf) {
-				await rightLeaf.setViewState({
-					type: VIEW_TYPE_DAILY_LOG,
-					active: true,
-				});
-			}
-
-			this.app.workspace.revealLeaf(
-				this.app.workspace.getLeavesOfType(VIEW_TYPE_DAILY_LOG)[0]
-			);
-		});
-		// Perform additional things with the ribbon
-		if (ribbonIconEl) {
-			ribbonIconEl.addClass('my-plugin-ribbon-class');
-		}
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		 // Add ribbon icon
+        this.addRibbonIcon('dice', 'TP-7 Daily Memo', () => {
+            new DailyLogModal(this.app, this).open();
+        });
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
@@ -66,21 +41,5 @@ export default class TP7DailyMemo extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
 	}
 }
