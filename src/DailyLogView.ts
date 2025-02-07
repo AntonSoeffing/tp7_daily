@@ -1,10 +1,10 @@
-import { ItemView, WorkspaceLeaf, Plugin, Notice, TFile, TFolder } from 'obsidian';
-import TP7DailyMemo, { VIEW_TYPE_DAILY_LOG } from './main'; // Import the main plugin class and named export
+import { ItemView, WorkspaceLeaf, Notice, TFile, TFolder, Setting } from 'obsidian';
+import TP7DailyMemo, { VIEW_TYPE_DAILY_LOG } from './main';
 import { createDailyNote } from './dailyLogCreator';
 import { TranscriptionService } from './services/transcriptionService';
 
 export default class DailyLogView extends ItemView {
-	plugin: TP7DailyMemo; // Use the actual plugin class type
+	plugin: TP7DailyMemo;
 	audioFiles: File[] = [];
 
 	constructor(leaf: WorkspaceLeaf, plugin: TP7DailyMemo) {
@@ -22,55 +22,99 @@ export default class DailyLogView extends ItemView {
 
 	async onOpen() {
 		this.contentEl.empty();
-		// Create a header
-		this.contentEl.createEl('h1', { text: 'Create Daily Log from TP-7 Memos' });
+		this.createUI();
 
-		// Get the current date in YYYY-MM-DD format
-		const today = new Date().toISOString().split('T')[0];
-
-		// Create a date input for the journal date
-		const dateInput = this.contentEl.createEl('input', { type: 'date' });
-		dateInput.value = today; // Set the default value to today's date
-
-		// Create a drop zone for file uploads
-		const dropZone = this.contentEl.createEl('div', { text: 'Drop your TP-7 audio files here' });
-		dropZone.style.border = '2px dashed #ccc';
-		dropZone.style.padding = '20px';
-		dropZone.style.marginTop = '10px';
-		// Add file drop event listeners
-		dropZone.addEventListener('dragover', (e) => {
+		// Attach drag event listeners to the whole view.
+		this.contentEl.addEventListener('dragover', (e) => {
 			e.preventDefault();
-			dropZone.style.backgroundColor = '#fafafa';
+			e.stopPropagation();
 		});
-		dropZone.addEventListener('dragleave', (e) => {
+		this.contentEl.addEventListener('dragenter', (e) => {
 			e.preventDefault();
-			dropZone.style.backgroundColor = 'transparent';
+			e.stopPropagation();
+			this.contentEl.classList.add('dragover');
 		});
-		dropZone.addEventListener('drop', (e: DragEvent) => {
+		this.contentEl.addEventListener('dragleave', (e) => {
 			e.preventDefault();
+			e.stopPropagation();
+			this.contentEl.classList.remove('dragover');
+		});
+		this.contentEl.addEventListener('drop', (e: DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			this.contentEl.classList.remove('dragover');
 			if (e.dataTransfer?.files) {
-				this.audioFiles = Array.from(e.dataTransfer.files);
-				new Notice(`Added ${this.audioFiles.length} audio files.`);
+				const newFiles = Array.from(e.dataTransfer.files);
+				this.audioFiles.push(...newFiles);
+				new Notice(`Added ${newFiles.length} audio files.`);
+				(window as any).updateAudioFilesView();
 			}
 		});
+	}
 
-		// Create a "Create Daily Note" button
-		const createButton = this.contentEl.createEl('button', { text: 'Create Daily Note' });
+	createUI() {
+		const { contentEl } = this;
+		contentEl.createEl('h1', { text: 'Create Daily Log from TP-7 Memos' });
+
+		let datePicker: HTMLInputElement;
+		new Setting(contentEl)
+			.setName('Journal Date')
+			.setDesc('Select the date for the journal entry')
+			.addText(text => {
+				text.inputEl.type = 'date';
+				const initial = new Date().toISOString().split('T')[0];
+				text.setValue(initial);
+				datePicker = text.inputEl;
+				text.onChange(value => datePicker.value = value);
+			});
+
+		// Combined area for listing audio files.
+		const dropSetting = new Setting(contentEl)
+			.setName('Upload Audio Files')
+			.setDesc('Drag and drop your TP-7 audio files anywhere in the view');
+		// Container for displaying the list.
+		const audioFilesContainer = dropSetting.controlEl.createEl('div', { cls: 'audio-files-container' });
+		
+		// Helper function to update the file list view.
+		const updateAudioFilesView = () => {
+			audioFilesContainer.empty();
+			if (this.audioFiles.length === 0) {
+				audioFilesContainer.createEl('p', { text: 'No files added.' });
+			} else {
+				this.audioFiles.forEach((file, idx) => {
+					const item = audioFilesContainer.createEl('div', { cls: 'setting-item' });
+					const info = item.createEl('div', { cls: 'setting-item-info' });
+					info.createEl('div', { cls: 'setting-item-name', text: file.name });
+					const control = item.createEl('div', { cls: 'setting-item-control' });
+					const removeButton = control.createEl('button', { text: 'Remove' });
+					removeButton.addEventListener('click', () => {
+						this.audioFiles.splice(idx, 1);
+						updateAudioFilesView();
+						new Notice(`Removed ${file.name}`);
+					});
+				});
+			}
+		};
+		// Expose updateAudioFilesView to the drop event.
+		(window as any).updateAudioFilesView = updateAudioFilesView;
+		updateAudioFilesView();
+
+		const createButton = contentEl.createEl('button', { text: 'Create Daily Note' });
 		createButton.addEventListener('click', async () => {
-			const selectedDate = dateInput.value;
 			const transcriptionService = new TranscriptionService(this.plugin.settings);
-
 			await createDailyNote(
 				this.app,
-				selectedDate,
+				datePicker.value,
 				this.audioFiles,
 				this.plugin.settings,
 				transcriptionService
 			);
-
 			this.audioFiles = [];
+			updateAudioFilesView();
 		});
+
 		// ...existing code...
+		contentEl.appendChild(createButton);
 	}
 
 	async onClose() {
