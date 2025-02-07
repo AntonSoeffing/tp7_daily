@@ -46,7 +46,7 @@ export default class DailyLogView extends ItemView {
 			e.stopPropagation();
 			this.contentEl.classList.remove('dragover');
 			if (e.dataTransfer?.files) {
-				const newFiles = Array.from(e.dataTransfer.files);
+				const newFiles = Array.from(e.dataTransfer.files).filter(file => !this.isFileAlreadyAdded(file));
 				this.audioFiles.push(...newFiles);
 				new Notice(`Added ${newFiles.length} audio files.`);
 				(window as any).updateAudioFilesView();
@@ -134,5 +134,13 @@ export default class DailyLogView extends ItemView {
 
 	async onClose() {
 		// ...existing code...
+	}
+
+	isFileAlreadyAdded(file: File): boolean {
+		return this.audioFiles.some(existingFile =>
+			existingFile.name === file.name &&
+			existingFile.size === file.size &&
+			existingFile.lastModified === file.lastModified
+		);
 	}
 }
