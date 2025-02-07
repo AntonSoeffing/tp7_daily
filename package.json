@@ -1,15 +1,21 @@
 {
-	"name": "tp7-daily",
+	"name": "tp7-daily-memo",
 	"version": "1.0.0",
-	"description": "Integrate Teenage Engineering TP-7 Memos into Obsidian daily notes with AI transcription and summarization",
+	"description": "A plugin to integrate Teenage Engineering TP-7 memos into Obsidian daily notes using OpenAI",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": ["teenage engineering", "tp-7", "audio", "memos", "transcription", "daily-notes"],
-	"author": "Anton",
+	"keywords": [
+		"obsidian-plugin",
+		"teenage-engineering",
+		"tp-7",
+		"openai",
+		"whisper"
+	],
+	"author": "Your Name",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
@@ -22,7 +28,6 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"moment": "^2.30.1",
-		"openai": "^4.20.1"
+		"openai": "^4.24.1"
 	}
 }

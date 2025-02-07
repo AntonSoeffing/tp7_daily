@@ -1,8 +1,7 @@
-import { App, Modal, Notice, Setting, ButtonComponent } from 'obsidian';
+import { App, Modal, Notice, Setting, ButtonComponent, moment } from 'obsidian';
 import { createDailyNote } from './dailyLogCreator';
 import { TranscriptionService } from './services/transcriptionService';
 import TP7DailyMemo from './main';
-import moment from 'moment';
 
 export class DailyLogModal extends Modal {
     private audioFiles: File[] = [];
@@ -82,7 +81,7 @@ export class DailyLogModal extends Modal {
     private formatFileName(fileName: string): { displayDate: string, displayTime: string, sequence: string } {
         const [date, time, sequence] = fileName.split('_');
         return {
-            displayDate: moment(date, 'YYYY-MM-DD').format(this.plugin.settings.dateFormat),
+            displayDate: window.moment(date, 'YYYY-MM-DD').format(this.plugin.settings.dateFormat),
             displayTime: `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`,
             sequence: sequence.replace('.wav', '')
         };
@@ -126,8 +125,8 @@ export class DailyLogModal extends Modal {
             const [dateB, timeB] = b.name.split('_');
             
             // Create comparable timestamps
-            const timestampA = moment(`${dateA} ${timeA.slice(0, 2)}:${timeA.slice(2, 4)}:${timeA.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
-            const timestampB = moment(`${dateB} ${timeB.slice(0, 2)}:${timeB.slice(2, 4)}:${timeB.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
+            const timestampA = window.moment(`${dateA} ${timeA.slice(0, 2)}:${timeA.slice(2, 4)}:${timeA.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
+            const timestampB = window.moment(`${dateB} ${timeB.slice(0, 2)}:${timeB.slice(2, 4)}:${timeB.slice(4, 6)}`, 'YYYY-MM-DD HH:mm:ss');
             
             return timestampA.valueOf() - timestampB.valueOf();
         });

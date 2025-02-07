@@ -1,8 +1,7 @@
-import { Notice, TFile, App, Modal, Setting } from 'obsidian';
+import { Notice, TFile, App, Modal, Setting, moment } from 'obsidian';
 import { MyPluginSettings } from './settings';
 import { ITranscriptionService } from './services/interfaces';
 import { NoteGenerationService } from './services/noteGenerationService';
-import moment from 'moment';
 
 class FileExistsModal extends Modal {
     private result: boolean = false;
@@ -67,7 +66,7 @@ export async function createDailyNote(
     }
 
     const noteGenerationService = new NoteGenerationService();
-    const formattedDate = moment(selectedDate, 'YYYY-MM-DD').format(settings.dateFormat);
+    const formattedDate = window.moment(selectedDate, 'YYYY-MM-DD').format(settings.dateFormat);
     const fileName = `${formattedDate}.md`;
     const filePath = `${settings.journalFolder}/${fileName}`;
 
@@ -115,7 +114,7 @@ export async function createDailyNote(
             audioFiles.forEach((audioFile, index) => {
                 const transcript = transcripts[index];
                 const [date, time] = audioFile.name.split('_').slice(0, 2);
-                const formattedDate = moment(date, 'YYYY-MM-DD').format(settings.dateFormat);
+                const formattedDate = window.moment(date, 'YYYY-MM-DD').format(settings.dateFormat);
                 const formattedTime = `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`;
                 generatedContent += `> > [!quote]- Transcript for ${formattedDate} at ${formattedTime}\n> > ${transcript}\n>\n`;
             });
