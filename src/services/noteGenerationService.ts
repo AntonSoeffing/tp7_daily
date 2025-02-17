@@ -21,6 +21,11 @@ export class NoteGenerationService implements INoteGenerationService {
         
         // Build system prompt with instructions and template.
         const systemPrompt = `You are a markdown note generator for obsidian.md second brains. Always respond with pure markdown content without any code blocks or annotations. Use the provided template structure but fill it with relevant information from the transcripts.
+Never use:  
+- Code blocks  
+- HTML tags  
+- Unsupported Markdown syntax
+
 Template:
 ${template}`;
         
