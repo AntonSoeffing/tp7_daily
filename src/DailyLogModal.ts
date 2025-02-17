@@ -106,7 +106,8 @@ export class DailyLogModal extends Modal {
                                 datePicker.value,
                                 this.audioFiles,
                                 this.plugin.settings,
-                                transcriptionService
+                                transcriptionService,
+                                this.plugin.linkTracker.getLinks()
                             );
                             this.close();
                         } finally {

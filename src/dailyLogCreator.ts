@@ -53,7 +53,8 @@ export async function createDailyNote(
     selectedDate: string,
     audioFiles: File[],
     settings: MyPluginSettings,
-    transcriptionService: ITranscriptionService
+    transcriptionService: ITranscriptionService,
+    trackedLinks?: { link: string; timestamp: number; source: string }[]
 ): Promise<void> {
     if (!selectedDate) {
         new Notice('Please select a date.');
@@ -95,7 +96,7 @@ export async function createDailyNote(
         const transcripts = settings.useTestTranscript 
             ? [await transcriptionService.transcribeAudio(new File([], 'test.wav'), settings.openaiApiKey)]
             : await Promise.all(
-                audioFiles.map(file => transcriptionService.transcribeAudio(file, settings.openaiApiKey))
+                audioFiles.map(file => transcriptionService.transcribeAudio(file, settings.openaiApiKey, trackedLinks || []))
             );
 
         let generatedContent = await noteGenerationService.generateNote(

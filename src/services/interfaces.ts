@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 
 export interface ITranscriptionService {
-    transcribeAudio(audioFile: File, apiKey: string): Promise<string>;
+    transcribeAudio(audioFile: File, apiKey: string, links?: { link: string; timestamp: number; source: string }[]): Promise<string>;
 }
 
 export interface INoteGenerationService {
