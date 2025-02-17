@@ -18,24 +18,20 @@ export class NoteGenerationService implements INoteGenerationService {
             apiKey: apiKey,
             dangerouslyAllowBrowser: true // Required for client-side usage
         });
-
+        
+        // Build system prompt with instructions and template.
+        const systemPrompt = `You are a markdown note generator for obsidian.md second brains. Always respond with pure markdown content without any code blocks or annotations. Use the provided template structure but fill it with relevant information from the transcripts.
+Template:
+${template}`;
+        
+        // User message contains only the transcripts.
+        const transcriptMessage = transcripts.join("\n\n---\n\n");
+        
         const response = await this.openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o-mini",
             messages: [
-                {
-                    role: "system",
-                    content: [{
-                        type: "text",
-                        text: "You are a markdown note generator for obsidian.md second brains. Always respond with pure markdown content without any code blocks or annotations. Use the provided template structure but fill it with relevant information from the transcripts."
-                    }]
-                },
-                {
-                    role: "user",
-                    content: [{
-                        type: "text",
-                        text: this.createPrompt(template, transcripts)
-                    }]
-                }
+                { role: "system", content: systemPrompt },
+                { role: "user", content: transcriptMessage }
             ],
             response_format: { type: "text" },
             temperature: 1,
@@ -51,15 +47,5 @@ export class NoteGenerationService implements INoteGenerationService {
         }
 
         return content;
-    }
-
-    private createPrompt(template: string, transcripts: string[]): string {
-        return `Create a daily note based on this template and the transcripts. Keep the markdown formatting from the template but fill it with relevant information from the transcripts.
-
-Template:
-${template}
-
-Transcripts:
-${transcripts.join("\n\n---\n\n")}`;
     }
 }
