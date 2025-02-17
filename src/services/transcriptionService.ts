@@ -17,7 +17,7 @@ export class TranscriptionService implements ITranscriptionService {
         const selectedLinks: string[] = [];
         let tokenCount = 0;
         for (let i = sortedLinks.length - 1; i >= 0; i--) {
-            const linkText = sortedLinks[i].link;
+            const linkText = `[[${sortedLinks[i].link}]]`;
             // Estimate tokens by approximating one token per 4 characters.
             const linkTokens = Math.ceil(linkText.length / 4);
             if (tokenCount + linkTokens > maxTokens) {
