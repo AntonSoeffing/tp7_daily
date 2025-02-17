@@ -10,7 +10,7 @@ export class TranscriptionService implements ITranscriptionService {
     }
 
     private createContextPrompt(links: { link: string; timestamp: number; source: string }[]): string {
-        const maxTokens = 200;
+        const maxTokens = 180;
         // Sort links in ascending order: oldest first, most recent last.
         const sortedLinks = links.slice().sort((a, b) => a.timestamp - b.timestamp);
         // Start from the most recent and add links until estimated tokens exceed the limit.
