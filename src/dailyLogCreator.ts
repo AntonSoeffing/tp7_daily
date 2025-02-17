@@ -2,6 +2,7 @@ import { Notice, TFile, App, Modal, Setting, moment } from 'obsidian';
 import { MyPluginSettings } from './settings';
 import { ITranscriptionService } from './services/interfaces';
 import { NoteGenerationService } from './services/noteGenerationService';
+import { convertAudioFile } from './services/audioConversionService';
 
 class FileExistsModal extends Modal {
     private result: boolean = false;
@@ -56,6 +57,9 @@ export async function createDailyNote(
     transcriptionService: ITranscriptionService,
     trackedLinks?: { link: string; timestamp: number; source: string }[]
 ): Promise<void> {
+    console.log(`Creating daily note for date: ${selectedDate}`);
+    console.log(`Processing ${audioFiles.length} audio files`);
+
     if (!selectedDate) {
         new Notice('Please select a date.');
         return;
@@ -64,6 +68,25 @@ export async function createDailyNote(
     if (audioFiles.length === 0 && !settings.useTestTranscript) {
         new Notice('Please provide audio files or enable test mode.');
         return;
+    }
+
+    // Convert audio files to mp3 and save them in the recordings folder
+    if (!settings.useTestTranscript) {
+        console.log('Starting audio conversion process');
+        const convertedFiles: File[] = [];
+        for (const file of audioFiles) {
+            try {
+                console.log(`Converting file: ${file.name}`);
+                const { transcriptionFile } = await convertAudioFile(app, file, settings.recordingsFolder);
+                convertedFiles.push(transcriptionFile);
+                console.log(`Successfully converted: ${file.name}`);
+            } catch (error) {
+                console.error(`Error converting file ${file.name}:`, error);
+                new Notice(`Error converting file ${file.name}: ${error}`);
+            }
+        }
+        audioFiles = convertedFiles;
+        console.log(`Conversion complete. ${convertedFiles.length} files processed`);
     }
 
     const noteGenerationService = new NoteGenerationService();
@@ -93,11 +116,16 @@ export async function createDailyNote(
     }
 
     try {
+        console.log('Starting transcription process');
         const transcripts = settings.useTestTranscript 
             ? [await transcriptionService.transcribeAudio(new File([], 'test.wav'), settings.openaiApiKey)]
             : await Promise.all(
-                audioFiles.map(file => transcriptionService.transcribeAudio(file, settings.openaiApiKey, trackedLinks || []))
+                audioFiles.map(file => {
+                    console.log(`Transcribing file: ${file.name}`);
+                    return transcriptionService.transcribeAudio(file, settings.openaiApiKey, trackedLinks || []);
+                })
             );
+        console.log('Transcription complete');
 
         let generatedContent = await noteGenerationService.generateNote(
             app,

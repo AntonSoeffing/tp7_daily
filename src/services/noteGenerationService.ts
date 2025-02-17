@@ -12,7 +12,11 @@ export class NoteGenerationService implements INoteGenerationService {
     }
 
     async generateNote(app: App, transcripts: string[], templatePath: string, apiKey: string): Promise<string> {
+        console.log('Starting note generation process');
+        console.log(`Using template from: ${templatePath}`);
+        
         const template = await this.templateService.loadTemplate(app, templatePath);
+        console.log('Template loaded successfully');
         
         this.openai = new OpenAI({
             apiKey: apiKey,
@@ -41,6 +45,7 @@ ${template}`;
         // User message contains only the transcripts.
         const transcriptMessage = transcripts.join("\n\n---\n\n");
         
+        console.log('Sending request to OpenAI');
         const response = await this.openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
@@ -54,12 +59,15 @@ ${template}`;
             frequency_penalty: 0,
             presence_penalty: 0
         });
+        console.log('Received response from OpenAI');
 
         const content = response.choices[0].message.content;
         if (!content) {
+            console.error('No content received from OpenAI');
             throw new Error('No content received from OpenAI');
         }
 
+        console.log('Note generation completed successfully');
         return content;
     }
 }

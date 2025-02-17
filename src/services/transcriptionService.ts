@@ -34,11 +34,15 @@ export class TranscriptionService implements ITranscriptionService {
     }
 
     async transcribeAudio(audioFile: File, apiKey: string, links: { link: string; timestamp: number; source: string }[] = []): Promise<string> {
+        console.log(`Starting transcription for file: ${audioFile.name}`);
+        
         if (this.settings.useTestTranscript) {
+            console.log('Using test transcript');
             return this.TEST_TRANSCRIPT;
         }
 
         if (!apiKey) {
+            console.error('OpenAI API key not set');
             throw new Error('OpenAI API key is not set in the settings.');
         }
 
@@ -51,6 +55,7 @@ export class TranscriptionService implements ITranscriptionService {
             formData.append('prompt', this.createContextPrompt(links));
         }
 
+        console.log('Sending request to OpenAI Whisper API');
         const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
@@ -60,10 +65,12 @@ export class TranscriptionService implements ITranscriptionService {
         });
 
         if (!response.ok) {
+            console.error(`Transcription failed with status: ${response.status}`);
             throw new Error(`Transcription failed: ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('Transcription completed successfully');
         return data.text;
     }
 }

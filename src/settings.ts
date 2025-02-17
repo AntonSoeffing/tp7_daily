@@ -7,7 +7,8 @@ export interface MyPluginSettings {
 	openaiApiKey: string;
 	useTestTranscript: boolean;
 	dailyNoteTemplatePath: string;
-	// New settings version property
+	// New property for storing converted recordings
+	recordingsFolder: string;
 	settingsVersion: number;
 }
 
@@ -17,7 +18,7 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	openaiApiKey: '',
 	useTestTranscript: false,
 	dailyNoteTemplatePath: '',
-	// Initialize version - update if defaults change
+	recordingsFolder: 'recordings',
 	settingsVersion: 1
 }
 
@@ -87,6 +88,17 @@ export class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.dailyNoteTemplatePath)
 				.onChange(async (value) => {
 					this.plugin.settings.dailyNoteTemplatePath = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Recordings Folder')
+			.setDesc('Folder in the vault where converted mp3 recordings will be stored')
+			.addText(text => text
+				.setPlaceholder('recordings')
+				.setValue(this.plugin.settings.recordingsFolder)
+				.onChange(async (value) => {
+					this.plugin.settings.recordingsFolder = value;
 					await this.plugin.saveSettings();
 				}));
 	}
