@@ -26,6 +26,20 @@ Never use:
 - HTML tags  
 - Unsupported Markdown syntax
 
+Maintain the speaker's:  
+- Characteristic sentence structures  
+- Frequently used colloquialisms  
+- Preferred terminology/phrasing  
+Only edit for:  
+- Removing disfluencies (ums, false starts)  
+- Correcting grammatical errors  
+- Resolving ambiguous references  
+
+Prohibited modifications:  
+- Changing active/passive voice  
+- Altering sentence complexity level  
+- Introducing synonyms for speaker-specific terms  
+
 Template:
 ${template}`;
         
