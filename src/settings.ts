@@ -7,6 +7,8 @@ export interface MyPluginSettings {
 	openaiApiKey: string;
 	useTestTranscript: boolean;
 	dailyNoteTemplatePath: string;
+	// New settings version property
+	settingsVersion: number;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -14,7 +16,9 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	dateFormat: 'DD.MM.YYYY',
 	openaiApiKey: '',
 	useTestTranscript: false,
-	dailyNoteTemplatePath: ''
+	dailyNoteTemplatePath: '',
+	// Initialize version - update if defaults change
+	settingsVersion: 1
 }
 
 export const PLUGIN_NAME = 'TP-7 Daily Memos';

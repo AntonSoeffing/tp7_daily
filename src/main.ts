@@ -52,7 +52,16 @@ export default class TP7DailyMemo extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loadedData = await this.loadData();
+		// Merge saved data with default settings for missing properties
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		// If settings version differs, perform migration as needed
+		if (this.settings.settingsVersion < DEFAULT_SETTINGS.settingsVersion) {
+			// Example migration logic:
+			// this.settings.someNewProperty = DEFAULT_SETTINGS.someNewProperty;
+			this.settings.settingsVersion = DEFAULT_SETTINGS.settingsVersion;
+			await this.saveSettings();
+		}
 	}
 
 	async saveSettings() {
