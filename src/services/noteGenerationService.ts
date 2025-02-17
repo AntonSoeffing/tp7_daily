@@ -20,7 +20,12 @@ export class NoteGenerationService implements INoteGenerationService {
         });
         
         // Build system prompt with instructions and template.
-        const systemPrompt = `You are a markdown note generator for obsidian.md second brains. Always respond with pure markdown content without any code blocks or annotations. Use the provided template structure but fill it with relevant information from the transcripts.
+        const systemPrompt = `You are a markdown note generator for obsidian.md second brains. Always respond with pure markdown content without any code blocks or annotations.
+        
+Use the provided template as a template to create a new log from the transcripts.
+Keep the structure of the template intact and only replace the placeholders with the actual content.
+E.g. Do NOT add any new sections.
+
 Never use:  
 - Code blocks  
 - HTML tags  
@@ -39,6 +44,10 @@ Prohibited modifications:
 - Changing active/passive voice  
 - Altering sentence complexity level  
 - Introducing synonyms for speaker-specific terms  
+
+- Do not change the speaker's voice or tone.
+- Do not add any new information.
+- Do not remove any information.
 
 Template:
 ${template}`;
