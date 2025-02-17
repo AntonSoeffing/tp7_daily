@@ -11,6 +11,7 @@ export default class TP7DailyMemo extends Plugin {
 	linkTracker: LinkTracker;
 
 	async onload() {
+		console.log('Loading TP7 Daily Memos plugin');
 		await this.loadSettings();
 		this.linkTracker = new LinkTracker(this);
 		await this.linkTracker.init();
@@ -47,6 +48,8 @@ export default class TP7DailyMemo extends Plugin {
 	}
 
 	onunload() {
+		// Force settings flush before deactivation (hot reload scenario)
+		this.saveSettings();
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_DAILY_LOG);
 		this.linkTracker.save();
 	}
@@ -55,6 +58,12 @@ export default class TP7DailyMemo extends Plugin {
 		const loadedData = await this.loadData();
 		// Merge saved data with default settings for missing properties
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		// Check localStorage for temporary settings from previous unload
+		const tmpSettings = window.localStorage.getItem('tp7_daily_plugin_settings_temp');
+		if (tmpSettings) {
+			this.settings = Object.assign({}, this.settings, JSON.parse(tmpSettings));
+			window.localStorage.removeItem('tp7_daily_plugin_settings_temp');
+		}
 		// If settings version differs, perform migration as needed
 		if (this.settings.settingsVersion < DEFAULT_SETTINGS.settingsVersion) {
 			// Example migration logic:
@@ -66,5 +75,7 @@ export default class TP7DailyMemo extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		// Also cache settings in localStorage as a backup during hot reload
+		window.localStorage.setItem('tp7_daily_plugin_settings_temp', JSON.stringify(this.settings));
 	}
 }
