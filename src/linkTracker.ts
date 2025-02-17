@@ -59,18 +59,25 @@ export default class LinkTracker {
     const previousLinks = [...this.lastContent.matchAll(linkRegex)]
       .map(m => m[1].trim());
 
-    return currentLinks.filter(link => 
-      !previousLinks.includes(link) &&
-      !this.trackedLinks.some(t => t.link === link)
-    );
+    // Remove condition checking trackedLinks so duplicate usage gets processed
+    return currentLinks.filter(link => !previousLinks.includes(link));
   }
 
   private trackLink(link: string) {
-    this.trackedLinks = [{
-      link,
-      timestamp: Date.now(),
-      source: this.currentFile
-    }, ...this.trackedLinks].slice(0, 100);
+    const existingIndex = this.trackedLinks.findIndex(t => t.link === link);
+    if (existingIndex !== -1) {
+      // Move the existing link to the first position and update the timestamp
+      const [existingLink] = this.trackedLinks.splice(existingIndex, 1);
+      existingLink.timestamp = Date.now();
+      this.trackedLinks = [existingLink, ...this.trackedLinks];
+    } else {
+      // Add new link to the first position
+      this.trackedLinks = [{
+        link,
+        timestamp: Date.now(),
+        source: this.currentFile
+      }, ...this.trackedLinks].slice(0, 100);
+    }
     
     console.log('Tracked stable link:', link);
   }
