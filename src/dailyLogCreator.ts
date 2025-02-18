@@ -145,10 +145,12 @@ export async function createDailyNote(
                 const [date, time] = audioFile.name.split('_').slice(0, 2);
                 const formattedDate = window.moment(date, 'YYYY-MM-DD').format(settings.dateFormat);
                 const formattedTime = `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`;
-                generatedContent += `> > [!quote]- Transcript for ${formattedDate} at ${formattedTime}\n> > ${transcript}\n>\n`;
+                const mp3FileName = audioFile.name.replace(/\.[^.]+$/, '.mp3');
+                generatedContent += `> > [!quote]- Transcript for ${formattedDate} at ${formattedTime}\n`;
+                generatedContent += `> > ![[${mp3FileName}]]\n`;
+                generatedContent += `> > ${transcript}\n>\n`;
             });
         }
-        
 
         await app.vault.create(finalFilePath, generatedContent);
         new Notice(`Created daily note: ${finalFilePath}`);

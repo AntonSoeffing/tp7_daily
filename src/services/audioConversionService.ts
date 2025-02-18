@@ -33,12 +33,6 @@ export async function convertAudioFile(
 ): Promise<ConversionResult> {
     console.log(`Starting audio conversion for file: ${inputFile.name}`);
 
-    // Ensure recordings folder exists
-    if (!(await app.vault.adapter.exists(recordingsFolder))) {
-        await app.vault.createFolder(recordingsFolder);
-        console.log(`Created recordings folder: ${recordingsFolder}`);
-    }
-
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
     try {
@@ -54,13 +48,6 @@ export async function convertAudioFile(
         const outputFileName = inputFile.name.replace(/\.[^.]+$/, '.mp3');
         const outputPath = join(recordingsFolder, outputFileName);
         const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-        
-        // Create any missing parent folders
-        const parentFolder = outputPath.split('/').slice(0, -1).join('/');
-        if (parentFolder && !(await app.vault.adapter.exists(parentFolder))) {
-            await app.vault.createFolder(parentFolder);
-        }
-        
         await app.vault.createBinary(outputPath, await blob.arrayBuffer());
         
         const vaultFile = app.vault.getAbstractFileByPath(outputPath) as TFile;
