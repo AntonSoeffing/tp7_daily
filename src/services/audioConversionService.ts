@@ -48,9 +48,24 @@ export async function convertAudioFile(
         const outputFileName = inputFile.name.replace(/\.[^.]+$/, '.mp3');
         const outputPath = join(recordingsFolder, outputFileName);
         const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-        await app.vault.createBinary(outputPath, await blob.arrayBuffer());
+        const arrayBufferBlob = await blob.arrayBuffer();
         
-        const vaultFile = app.vault.getAbstractFileByPath(outputPath) as TFile;
+        let vaultFile: TFile;
+        if (await app.vault.adapter.exists(outputPath)) {
+            console.log(`Overriding existing file at: ${outputPath}`);
+            let existingFile = app.vault.getAbstractFileByPath(outputPath) as TFile | null;
+            if (existingFile) {
+                await app.vault.modifyBinary(existingFile, arrayBufferBlob);
+                vaultFile = existingFile;
+            } else {
+                console.log(`Orphan file found at ${outputPath}. Removing and re-creating.`);
+                await app.vault.adapter.remove(outputPath);
+                vaultFile = await app.vault.createBinary(outputPath, arrayBufferBlob);
+            }
+        } else {
+            vaultFile = await app.vault.createBinary(outputPath, arrayBufferBlob);
+        }
+        
         const transcriptionFile = new File([blob], outputFileName, { type: 'audio/mp3' });
         
         return { vaultFile, transcriptionFile };
